@@ -33,10 +33,12 @@ class MoviesTable(MediaTable):
         self.__db_connection.commit()
     
     def edit_record(self, id, **kwargs):
-        pass
+        for key in kwargs:
+            db_cursor.execute(f"UPDATE {self.__table_name} SET {key} = '{kwargs[key]}' WHERE rowid = '{id}'")
     
     def delete_record(self, id):
-        pass
+        self.__db_cursor.execute(f"DELETE from {self.__table_name} WHERE rowid = '{id}'")
+        self.__db_connection.commit()
     
     def get_all_records(self):
         self.__db_cursor.execute(f"SELECT rowid, * FROM {self.__table_name} ORDER BY rowid")
@@ -61,10 +63,12 @@ class GamesTable(MediaTable):
         self.__db_connection.commit()
     
     def edit_record(self, id, **kwargs):
-        pass
+        for key in kwargs:
+            db_cursor.execute(f"UPDATE {self.__table_name} SET {key} = '{kwargs[key]}' WHERE rowid = '{id}'")
     
     def delete_record(self, id):
-        pass
+        self.__db_cursor.execute(f"DELETE from {self.__table_name} WHERE rowid = '{id}'")
+        self.__db_connection.commit()
     
     def get_all_records(self):
         self.__db_cursor.execute(f"SELECT rowid, * FROM {self.__table_name} ORDER BY rowid")
@@ -89,10 +93,13 @@ class MusicTable(MediaTable):
         self.__db_connection.commit()
     
     def edit_record(self, id, **kwargs):
-        pass
+        for key in kwargs:
+            self.__db_cursor.execute(f"UPDATE {self.__table_name} SET {key} = '{kwargs[key]}' WHERE rowid = '{id}'")
+            self.__db_connection.commit()
     
     def delete_record(self, id):
-        pass
+        self.__db_cursor.execute(f"DELETE from {self.__table_name} WHERE rowid = '{id}'")
+        self.__db_connection.commit()
     
     def get_all_records(self):
         self.__db_cursor.execute(f"SELECT rowid, * FROM {self.__table_name} ORDER BY rowid")
@@ -125,8 +132,11 @@ if __name__ == "__main__":
     
     music_record = ('Smells Like Teen Spirit', 'Nevermind', 'Nirvana')
     music_table.add_record(music_record)
-    music_table = music_table.get_all_records()
-    for x in music_table:
+    music_records = music_table.get_all_records()
+    for x in music_records:
         print(x)
+
+    music_table.edit_record(1, song="Come as You Are")
+    music_table.delete_record(1)
     
     db_connection.close()
