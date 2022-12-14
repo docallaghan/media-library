@@ -1,14 +1,17 @@
 import tkinter as tk
 from tkinter import ttk
 import media_tables
+import sqlite3
 
 class GUI(tk.Tk):
-    def __init__(self, title="Media Library", w=800, h=500):
+    def __init__(self, title="Media Library", w=800, h=500, database_path="media.db"):
         super().__init__()
         self.title(title)
         self.geometry(f"{w}x{h}")
         self.w = w
         self.h = h
+        self.__database_path = database_path
+        self.__connect_to_database(self.__database_path)
         self.__initialise_widgets()
 
     def __initialise_widgets(self):
@@ -40,13 +43,25 @@ class GUI(tk.Tk):
         window.add(games_frame, text="Games")
         window.add(music_frame, text="Music")
 
-        movies_tab = MoviesTab(movies_frame)
-        games_tab = GamesTab(games_frame)
-        music_tab = MusicTab(music_frame)
+        self.movies_tab = MoviesTab(movies_frame, self.__db_connection, self.__db_cursor)
+        self.games_tab = GamesTab(games_frame, self.__db_connection, self.__db_cursor)
+        self.music_tab = MusicTab(music_frame, self.__db_connection, self.__db_cursor)
+    
+    def __connect_to_database(self, database_path):
+        # persistent storage DB
+        self.__db_connection = sqlite3.connect(database_path)
+        # create cursor
+        self.__db_cursor = self.__db_connection.cursor()
+        print(f"Connected to {database_path}")
+    
+    def __close_database_connection(self):
+        self.__db_connection.close()
 
 
 class MediaTab:
     def __init__(self, master):
+        self.master = master
+
         # Frame for table
         self.table_frame = tk.Frame(master)
         self.table_frame.pack(pady=20)
@@ -64,8 +79,12 @@ class MediaTab:
 
 
 class MoviesTab(MediaTab):
-    def __init__(self, master):
+    def __init__(self, master, db_connection, db_cursor):
         super().__init__(master)
+        self.__db_connection = db_connection
+        self.__db_cursor = db_cursor
+
+        self.media_tables = media_tables.MoviesTable(self.__db_connection, self.__db_cursor)
 
         # Columns
         self.table["columns"] = ("ID", "Title", "Director", "Year")
@@ -82,8 +101,12 @@ class MoviesTab(MediaTab):
         self.table.heading("Year", text="Year", anchor=tk.CENTER)
 
 class GamesTab(MediaTab):
-    def __init__(self, master):
+    def __init__(self, master, db_connection, db_cursor):
         super().__init__(master)
+        self.__db_connection = db_connection
+        self.__db_cursor = db_cursor
+
+        self.media_tables = media_tables.GamesTable(self.__db_connection, self.__db_cursor)
 
         # Columns
         self.table["columns"] = ("ID", "Name", "Platform", "Developer")
@@ -101,8 +124,12 @@ class GamesTab(MediaTab):
 
 
 class MusicTab(MediaTab):
-    def __init__(self, master):
+    def __init__(self, master, db_connection, db_cursor):
         super().__init__(master)
+        self.__db_connection = db_connection
+        self.__db_cursor = db_cursor
+
+        self.media_tables = media_tables.MusicTable(self.__db_connection, self.__db_cursor)
 
         # Columns
         self.table["columns"] = ("ID", "Song", "Album", "Artist")
@@ -117,23 +144,28 @@ class MusicTab(MediaTab):
         self.table.heading("Song", text="Song", anchor=tk.CENTER)
         self.table.heading("Album", text="Album", anchor=tk.CENTER)
         self.table.heading("Artist", text="Artist", anchor=tk.CENTER)
+        
+        self.fill_tables_test()
+    
+    def fill_tables_test(self):
+        tables = self.media_tables.get_all_records()
+        for table in tables:
+            print(table)
+            for record in tables[table]:
+                print("\t", record)
+        print()
 
-        # data = [
-        #     [0, "The Chain", "Rumours", "Fleetwood Mac"],
-        #     [1, 'Wake Up', 'Funeral', 'Arcade Fire'],
-        #     [2, 'Digital Love', 'Discovery', 'Daft Punk'],
-        # ]
-
-        # self.table.tag_configure("oddrow", background="white")
-        # self.table.tag_configure("evenrow", background="lightblue")
-
-        # count = 0
-        # for record in data:
-        #     if count % 2 == 0:
-        #         self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("evenrow",))
-        #     else:
-        #         self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("oddrow",))
-        #     count += 1
+        self.table.tag_configure("oddrow", background="white")
+        self.table.tag_configure("evenrow", background="lightblue")
+        
+        table_data = tables["music_table"]
+        count = 0
+        for record in table_data:
+            if count % 2 == 0:
+                self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("evenrow",))
+            else:
+                self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("oddrow",))
+            count += 1
 
         # self.edits_frame = tk.LabelFrame(master, text="Edit")
         # self.edits_frame.pack(fill="x", expand="yes", padx=20)
@@ -181,7 +213,66 @@ class MusicTab(MediaTab):
     #     self.album_entry.insert(0,values[2])
     #     self.artist_entry.insert(0,values[3])
 
+def initialise_database_for_testing(database_path):
+    # persistent storage DB
+    db_connection = sqlite3.connect(database_path)
+
+    # create cursor
+    db_cursor = db_connection.cursor()
+
+    # Create tables
+    db_cursor.execute("""CREATE TABLE IF NOT EXISTS movies_table (
+                        title text,
+                        director text,
+                        year integer
+                    )""")
+    db_cursor.execute("""CREATE TABLE IF NOT EXISTS games_table (
+                        name text,
+                        platform text,
+                        developer text
+                    )""")
+    db_cursor.execute("""CREATE TABLE IF NOT EXISTS music_table (
+                        song text,
+                        album text,
+                        artist text
+                    )""")
+
+    # db_cursor.execute("INSERT INTO movies_table VALUES ('The Shawshank Redemption', 'Frank Darabont', 1994)")
+    entries = [
+        ('The Shawshank Redemption', 'Frank Darabont', 1994),
+        ('The Godfather', 'Francis Ford Coppola', 1972),
+        ('The Dark Knight', 'Christopher Nolan', 2008),
+        ('The Godfather Part II', 'Francis Ford Coppola', 1974),
+        ('12 Angry Men', 'Sidney Lumet', 1957),
+        ('Schindler''s List', 'Steven Spielberg', 1993),
+    ]
+    db_cursor.executemany("INSERT INTO movies_table VALUES (?, ?, ?)", entries)
+
+    entries = [
+        ('Red Dead Redemption 2', 'Rockstar Games', 'PlayStation 4'),
+        ('The Last of Us', 'Sony Computer Entertainment', 'PlayStation 3'),
+        ('Portal 2', 'Valve', 'PC'),
+        ('Minecraft', 'Mojang', 'PC'),
+        ('Super Mario Galaxy', 'Nintendo', 'Wii'),
+    ]
+    db_cursor.executemany("INSERT INTO games_table VALUES (?, ?, ?)", entries)
+
+    entries = [
+        ('Smells Like Teen Spirit', 'Nevermind', 'Nirvana'),
+        ('Wake Up', 'Funeral', 'Arcade Fire'),
+        ('Digital Love', 'Discovery', 'Daft Punk'),
+        ('Hard to Explain', 'Is This It', 'The Strokes'),
+        ('Jacksonville', 'Illinois', 'Sufjan Stevens'),
+    ]
+    db_cursor.executemany("INSERT INTO music_table VALUES (?, ?, ?)", entries)
+
+    # Commit command
+    db_connection.commit()
+
+    # Close connection
+    db_connection.close()
+
 if __name__ == "__main__":
-    gui = GUI()
-    gui.connect_to_database("media.db")
+    # initialise_database_for_testing("media.db")
+    gui = GUI(database_path="media.db")
     gui.mainloop()
