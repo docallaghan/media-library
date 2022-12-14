@@ -29,6 +29,14 @@ class MediaTable(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def add_new_category(self, category_name):
+        """Adds a new category
+        Parameters:
+            category_name (str): name of category to add record to
+        """
+        pass
+
+    @abc.abstractmethod
     def add_to_category(self, id, category_name):
         """Adds a specified record to a category
         Parameters:
@@ -97,6 +105,17 @@ class MoviesTable(MediaTable):
                 tables[table_name] = fetched_data
         return tables
     
+    def add_new_category(self, category_name):
+        # Add category table if it doesn't exist
+        table_name = f"{self.__table_name}_{category_name}"
+        self.__db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
+            orig_id int,
+            title text,
+            director text,
+            year integer
+            )""")
+        self.__db_connection.commit()
+
     def add_to_category(self, id, category_name):
         # Get record
         self.__db_cursor.execute(f"SELECT rowid, * FROM {self.__table_name} WHERE rowid = '{id}'")
@@ -183,6 +202,17 @@ class GamesTable(MediaTable):
                 tables[table_name] = fetched_data
         return tables
     
+    def add_new_category(self, category_name):
+        # Add category table if it doesn't exist
+        table_name = f"{self.__table_name}_{category_name}"
+        self.__db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
+            orig_id int,
+            title text,
+            director text,
+            year integer
+            )""")
+        self.__db_connection.commit()
+
     def add_to_category(self, id, category_name):
         # Get record
         self.__db_cursor.execute(f"SELECT rowid, * FROM {self.__table_name} WHERE rowid = '{id}'")
@@ -269,6 +299,17 @@ class MusicTable(MediaTable):
                 tables[table_name] = fetched_data
         return tables
     
+    def add_new_category(self, category_name):
+        # Add category table if it doesn't exist
+        table_name = f"{self.__table_name}_{category_name}"
+        self.__db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
+            orig_id int,
+            title text,
+            director text,
+            year integer
+            )""")
+        self.__db_connection.commit()
+
     def add_to_category(self, id, category_name):
         # Get record
         self.__db_cursor.execute(f"SELECT rowid, * FROM {self.__table_name} WHERE rowid = '{id}'")

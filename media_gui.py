@@ -4,7 +4,7 @@ import media_tables
 import sqlite3
 
 class GUI(tk.Tk):
-    def __init__(self, title="Media Library", w=800, h=500, database_path="media.db"):
+    def __init__(self, title="Media Library", w=700, h=500, database_path="media.db"):
         super().__init__()
         self.title(title)
         self.geometry(f"{w}x{h}")
@@ -29,11 +29,11 @@ class GUI(tk.Tk):
             background=[("selected", "blue")])
         
         window = ttk.Notebook(self)
-        window.pack()
+        window.pack(fill="both", expand=1)
 
-        movies_frame = tk.Frame(window, width=self.w, height=self.h, bg="blue")
-        games_frame = tk.Frame(window, width=self.w, height=self.h, bg="red")
-        music_frame = tk.Frame(window, width=self.w, height=self.h, bg="green")
+        movies_frame = tk.Frame(window, width=self.w, height=self.h)
+        games_frame = tk.Frame(window, width=self.w, height=self.h)
+        music_frame = tk.Frame(window, width=self.w, height=self.h)
 
         movies_frame.pack(fill="both", expand=1)
         games_frame.pack(fill="both", expand=1)
@@ -62,9 +62,19 @@ class MediaTab:
     def __init__(self, master):
         self.master = master
 
+        # Dropdown for selecting category
+        self.dropdown_frame = tk.Frame(self.master)
+        self.dropdown_frame.pack(fill="both", expand=1)
+        self.dropdown_label = tk.Label(self.dropdown_frame, text="Category")
+        self.dropdown_label.grid(row=0, column=0, sticky="NESW")
+        self.dropdown_menu = ttk.Combobox(self.dropdown_frame, state="readonly", values=["All"])
+        self.dropdown_menu.grid(row=0, column=1)
+        self.dropdown_menu.set("All")
+        
         # Frame for table
         self.table_frame = tk.Frame(self.master)
-        self.table_frame.pack(pady=20)
+        # self.table_frame.pack(pady=20)
+        self.table_frame.pack(fill="both", expand=1)
 
         # Define scrollbar for table
         self.table_scroll = tk.Scrollbar(self.table_frame)
@@ -72,7 +82,7 @@ class MediaTab:
 
         # Table is a Treeview object
         self.table = ttk.Treeview(self.table_frame, yscrollcommand=self.table_scroll.set, selectmode="extended")
-        self.table.pack()
+        self.table.pack(pady=50)
 
         # Attach scrollbar
         self.table_scroll.config(command=self.table.yview)
@@ -159,15 +169,22 @@ class MusicTab(MediaTab):
         self.delete_button.grid(row=0, column=2, padx=10, pady=10)
         self.delete_button["state"] = "disabled"
 
-        self.new_cat_button = tk.Button(self.buttons_frame, text="Create New Category")
+        self.new_cat_button = tk.Button(self.buttons_frame, text="Create New Category", command=self.create_new_category_popup)
         self.new_cat_button.grid(row=0, column=3, padx=10, pady=10)
 
         self.move_cat_button = tk.Button(self.buttons_frame, text="Move Item to Category")
         self.move_cat_button.grid(row=0, column=5, padx=10, pady=10)
 
         self.table.bind("<ButtonRelease-1>", lambda x : self.enable_buttons(""))
-        
-        self.fill_tables_test()
+        self.dropdown_menu.bind("<<ComboboxSelected>>", lambda x : self.change_category(""))
+        self.display_category = 0 # Initial dropdown key to display
+
+        self.update_table()
+        self.media_tables.add_to_category(1, "Favourites")
+        self.media_tables.add_to_category(2, "Favourites")
+        self.media_tables.add_to_category(4, "Favourites")
+        categories = self.get_categories()
+        print(categories)
     
     def enable_buttons(self, event):
         self.edit_button["state"] = "normal"
@@ -283,19 +300,14 @@ class MusicTab(MediaTab):
 
     def update_table(self):
         tables = self.media_tables.get_all_records()
-        for table in tables:
-            print(table)
-            for record in tables[table]:
-                print("\t", record)
-        print()
 
         for item in self.table.get_children():
             self.table.delete(item)
 
         self.table.tag_configure("oddrow", background="white")
         self.table.tag_configure("evenrow", background="lightblue")
-        
-        table_data = tables["music_table"]
+        category = list(tables.keys())[self.display_category]
+        table_data = tables[category]
         count = 0
         for record in table_data:
             if count % 2 == 0:
@@ -304,26 +316,72 @@ class MusicTab(MediaTab):
                 self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("oddrow",))
             count += 1
 
-    
-    def fill_tables_test(self):
+    def get_categories(self):
         tables = self.media_tables.get_all_records()
-        for table in tables:
-            print(table)
-            for record in tables[table]:
-                print("\t", record)
-        print()
+        category_names = list(tables.keys())[1:]
+        return category_names
+    
+    def change_category(self, event):
+        print(self.dropdown_menu.current())
+        self.display_category = self.dropdown_menu.current()
+        self.update_table()
+        self.disable_buttons()
+    
+    def update_dropdown_categories(self):
+        categories = self.get_categories()
+        categories = ["All"] + [x[len("music_table")+1:] for x in categories[1:]]
+        self.dropdown_menu["values"] = tuple(categories)
+    
+    def create_new_category_popup(self):
+        self.create_cat_window = tk.Tk()
+        self.create_cat_window.title("Create New Category")
+        self.create_cat_window.geometry(f"300x200")
 
-        self.table.tag_configure("oddrow", background="white")
-        self.table.tag_configure("evenrow", background="lightblue")
+        # Text fields
+        text_field_frame = tk.LabelFrame(self.create_cat_window, borderwidth=0, highlightthickness=0)
+        text_field_frame.pack(fill="x", expand="yes", padx=20)
         
-        table_data = tables["music_table"]
-        count = 0
-        for record in table_data:
-            if count % 2 == 0:
-                self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("evenrow",))
-            else:
-                self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("oddrow",))
-            count += 1
+        label1 = tk.Label(text_field_frame, text="Category Name")
+        label1.grid(row=0, column=0, padx=10, pady=5)
+        self.__entry1 = tk.Entry(text_field_frame, width=30)
+        self.__entry1.grid(row=0, column=1)
+        self.__entry1.grid(row=0, column=1)
+
+        # Buttons
+        button_frame = tk.LabelFrame(self.create_cat_window, borderwidth=0, highlightthickness=0)
+        button_frame.pack(fill="x", expand="yes", padx=20)
+
+        confirm_button_popup = tk.Button(button_frame, text="Confirm", command=lambda : self.create_new_category())
+        confirm_button_popup.pack(padx=10, pady=10)
+
+        cancel_button_popup = tk.Button(button_frame, text="Cancel", command=self.create_cat_window.destroy)
+        cancel_button_popup.pack(padx=10, pady=10)
+    
+    def create_new_category(self):
+        category_name = self.__entry1.get()
+        self.media_tables.add_new_category(category_name)
+        self.create_cat_window.destroy()
+        self.update_dropdown_categories()
+    
+    # def fill_tables_test(self):
+    #     tables = self.media_tables.get_all_records()
+    #     for table in tables:
+    #         print(table)
+    #         for record in tables[table]:
+    #             print("\t", record)
+    #     print()
+
+    #     self.table.tag_configure("oddrow", background="white")
+    #     self.table.tag_configure("evenrow", background="lightblue")
+        
+    #     table_data = tables["music_table"]
+    #     count = 0
+    #     for record in table_data:
+    #         if count % 2 == 0:
+    #             self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("evenrow",))
+    #         else:
+    #             self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("oddrow",))
+    #         count += 1
 
         # self.edits_frame = tk.LabelFrame(master, text="Edit")
         # self.edits_frame.pack(fill="x", expand="yes", padx=20)
