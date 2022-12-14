@@ -172,27 +172,32 @@ class MusicTab(MediaTab):
         self.new_cat_button = tk.Button(self.buttons_frame, text="Create New Category", command=self.create_new_category_popup)
         self.new_cat_button.grid(row=0, column=3, padx=10, pady=10)
 
-        self.move_cat_button = tk.Button(self.buttons_frame, text="Move Item to Category")
-        self.move_cat_button.grid(row=0, column=5, padx=10, pady=10)
+        self.add_to_cat_button = tk.Button(self.buttons_frame, text="Add Item to Category", command=self.add_to_category_popup)
+        self.add_to_cat_button.grid(row=0, column=5, padx=10, pady=10)
+        self.add_to_cat_button["state"] = "disabled"
 
         self.table.bind("<ButtonRelease-1>", lambda x : self.enable_buttons(""))
         self.dropdown_menu.bind("<<ComboboxSelected>>", lambda x : self.change_category(""))
         self.display_category = 0 # Initial dropdown key to display
 
+        
+
+        # self.media_tables.add_to_category(1, "Favourites")
+        # self.media_tables.add_to_category(2, "Favourites")
+        # self.media_tables.add_to_category(4, "Favourites")
+        
         self.update_table()
-        self.media_tables.add_to_category(1, "Favourites")
-        self.media_tables.add_to_category(2, "Favourites")
-        self.media_tables.add_to_category(4, "Favourites")
-        categories = self.get_categories()
-        print(categories)
+        self.update_dropdown_categories()
     
     def enable_buttons(self, event):
         self.edit_button["state"] = "normal"
         self.delete_button["state"] = "normal"
+        self.add_to_cat_button["state"] = "normal"
     
     def disable_buttons(self):
         self.edit_button["state"] = "disabled"
         self.delete_button["state"] = "disabled"
+        self.add_to_cat_button["state"] = "disabled"
     
     def add_item_popup(self):
         self.add_window = tk.Tk()
@@ -308,8 +313,13 @@ class MusicTab(MediaTab):
         self.table.tag_configure("evenrow", background="lightblue")
         category = list(tables.keys())[self.display_category]
         table_data = tables[category]
+        # print(category)
+        # print(table_data)
+        
         count = 0
         for record in table_data:
+            if category != "music_table":
+                record = tuple(list(record[1:]))
             if count % 2 == 0:
                 self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("evenrow",))
             else:
@@ -329,7 +339,7 @@ class MusicTab(MediaTab):
     
     def update_dropdown_categories(self):
         categories = self.get_categories()
-        categories = ["All"] + [x[len("music_table")+1:] for x in categories[1:]]
+        categories = ["All"] + [x[len("music_table")+1:] for x in categories]
         self.dropdown_menu["values"] = tuple(categories)
     
     def create_new_category_popup(self):
@@ -344,7 +354,6 @@ class MusicTab(MediaTab):
         label1 = tk.Label(text_field_frame, text="Category Name")
         label1.grid(row=0, column=0, padx=10, pady=5)
         self.__entry1 = tk.Entry(text_field_frame, width=30)
-        self.__entry1.grid(row=0, column=1)
         self.__entry1.grid(row=0, column=1)
 
         # Buttons
@@ -362,72 +371,51 @@ class MusicTab(MediaTab):
         self.media_tables.add_new_category(category_name)
         self.create_cat_window.destroy()
         self.update_dropdown_categories()
-    
-    # def fill_tables_test(self):
-    #     tables = self.media_tables.get_all_records()
-    #     for table in tables:
-    #         print(table)
-    #         for record in tables[table]:
-    #             print("\t", record)
-    #     print()
 
-    #     self.table.tag_configure("oddrow", background="white")
-    #     self.table.tag_configure("evenrow", background="lightblue")
+    def add_to_category_popup(self):
+        self.add_to_cat_window = tk.Tk()
+        self.add_to_cat_window.title("Add to Category")
+        self.add_to_cat_window.geometry(f"300x200")
+
+        # Text fields
+        text_field_frame = tk.LabelFrame(self.add_to_cat_window, borderwidth=0, highlightthickness=0)
+        text_field_frame.pack(fill="x", expand="yes", padx=20)
         
-    #     table_data = tables["music_table"]
-    #     count = 0
-    #     for record in table_data:
-    #         if count % 2 == 0:
-    #             self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("evenrow",))
-    #         else:
-    #             self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("oddrow",))
-    #         count += 1
+        label1 = tk.Label(text_field_frame, text="Category Name")
+        label1.grid(row=0, column=0, padx=10, pady=5)
 
-        # self.edits_frame = tk.LabelFrame(master, text="Edit")
-        # self.edits_frame.pack(fill="x", expand="yes", padx=20)
+        categories = self.get_categories()
+        categories = [x[len("music_table")+1:] for x in categories]
+        self.popup_dropdown_menu = ttk.Combobox(text_field_frame, state="readonly", values=categories)
+        self.popup_dropdown_menu.grid(row=0, column=1)
 
-        # self.title_label = tk.Label(self.edits_frame, text="Title")
-        # self.title_label.grid(row=0, column=0, padx=10, pady=10)
-        # self.title_entry = tk.Entry(self.edits_frame)
-        # self.title_entry.grid(row=0, column=1, padx=10, pady=10)
+        # Buttons
+        button_frame = tk.LabelFrame(self.add_to_cat_window, borderwidth=0, highlightthickness=0)
+        button_frame.pack(fill="x", expand="yes", padx=20)
 
-        # self.album_label = tk.Label(self.edits_frame, text="Album")
-        # self.album_label.grid(row=0, column=2, padx=10, pady=10)
-        # self.album_entry = tk.Entry(self.edits_frame)
-        # self.album_entry.grid(row=0, column=3, padx=10, pady=10)
+        confirm_button_popup = tk.Button(button_frame, text="Confirm", command=lambda : self.add_to_category())
+        confirm_button_popup.pack(padx=10, pady=10)
 
-        # self.artist_label = tk.Label(self.edits_frame, text="Artist")
-        # self.artist_label.grid(row=0, column=4, padx=10, pady=10)
-        # self.artist_entry = tk.Entry(self.edits_frame)
-        # self.artist_entry.grid(row=0, column=5, padx=10, pady=10)
+        cancel_button_popup = tk.Button(button_frame, text="Cancel", command=self.add_to_cat_window.destroy)
+        cancel_button_popup.pack(padx=10, pady=10)
+    
+    def add_to_category(self):
+        selected_item = self.table.focus()
+        if selected_item == '':
+            return # TODO disable button for this scenario
+        else:
+            print("Deleting")
+        values = self.table.item(selected_item, 'values')
+        record_id = int(values[0])
 
-
-        # self.buttons_frame = tk.LabelFrame(master, text="Options")
-        # self.buttons_frame.pack(fill="x", expand="yes", padx=20)
-
-        # self.add_button = tk.Button(self.buttons_frame, text="Add Record")
-        # self.add_button.grid(row=0, column=0, padx=10, pady=10)
-
-        # self.edit_button = tk.Button(self.buttons_frame, text="Edit Record", command=lambda x: self.select_record(""))
-        # self.edit_button.grid(row=0, column=1, padx=10, pady=10)
-
-        # self.delete_button = tk.Button(self.buttons_frame, text="Delete Record")
-        # self.delete_button.grid(row=0, column=2, padx=10, pady=10)
-
-        # self.table.bind("<ButtonRelease-1>", self.select_record)
-
-    # def select_record(self, event):
-    #     self.title_entry.delete(0, tk.END)
-    #     self.album_entry.delete(0, tk.END)
-    #     self.artist_entry.delete(0, tk.END)
-
-    #     # Get data from selected row
-    #     selected = self.table.focus()
-    #     values = self.table.item(selected, 'values')
-
-    #     self.title_entry.insert(0,values[1])
-    #     self.album_entry.insert(0,values[2])
-    #     self.artist_entry.insert(0,values[3])
+        categories = self.get_categories()
+        category_id = self.popup_dropdown_menu.current()
+        category = categories[category_id][len("music_table")+1:]
+        self.media_tables.add_to_category(record_id, category)
+        self.add_to_cat_window.destroy()
+        self.update_table()
+        self.disable_buttons()
+        
 
 def initialise_database_for_testing(database_path):
     # persistent storage DB

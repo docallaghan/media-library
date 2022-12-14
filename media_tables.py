@@ -89,6 +89,15 @@ class MoviesTable(MediaTable):
     def delete_record(self, id):
         self.__db_cursor.execute(f"DELETE from {self.__table_name} WHERE rowid = '{id}'")
         self.__db_connection.commit()
+        self.__delete_record_in_categories(id)
+    
+    def __delete_record_in_categories(self, id):
+        table_names = self.__get_table_names()
+
+        for table_name in table_names:
+            if self.__table_name != table_name:
+                self.__db_cursor.execute(f"DELETE from {table_name} WHERE orig_id = '{id}'")
+                self.__db_connection.commit()
     
     def get_all_records(self):
         tables = {}
@@ -186,6 +195,15 @@ class GamesTable(MediaTable):
     def delete_record(self, id):
         self.__db_cursor.execute(f"DELETE from {self.__table_name} WHERE rowid = '{id}'")
         self.__db_connection.commit()
+        self.__delete_record_in_categories(id)
+    
+    def __delete_record_in_categories(self, id):
+        table_names = self.__get_table_names()
+
+        for table_name in table_names:
+            if self.__table_name != table_name:
+                self.__db_cursor.execute(f"DELETE from {table_name} WHERE orig_id = '{id}'")
+                self.__db_connection.commit()
     
     def get_all_records(self):
         tables = {}
@@ -207,9 +225,9 @@ class GamesTable(MediaTable):
         table_name = f"{self.__table_name}_{category_name}"
         self.__db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
             orig_id int,
-            title text,
-            director text,
-            year integer
+            name text,
+            platform text,
+            developer text
             )""")
         self.__db_connection.commit()
 
@@ -222,9 +240,9 @@ class GamesTable(MediaTable):
         table_name = f"{self.__table_name}_{category_name}"
         self.__db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
             orig_id int,
-            title text,
-            director text,
-            year integer
+            name text,
+            platform text,
+            developer text
             )""")
         # Add record to new category (but only if it hasn't already been added)
         self.__db_cursor.execute(f"SELECT rowid, * FROM {table_name} WHERE orig_id = '{id}'")
@@ -273,6 +291,7 @@ class MusicTable(MediaTable):
     
     def __edit_record_in_categories(self, id, **kwargs):
         table_names = self.__get_table_names()
+
         for table_name in table_names:
             if self.__table_name != table_name:
                 for key in kwargs:
@@ -283,6 +302,15 @@ class MusicTable(MediaTable):
     def delete_record(self, id):
         self.__db_cursor.execute(f"DELETE from {self.__table_name} WHERE rowid = '{id}'")
         self.__db_connection.commit()
+        self.__delete_record_in_categories(id)
+    
+    def __delete_record_in_categories(self, id):
+        table_names = self.__get_table_names()
+
+        for table_name in table_names:
+            if self.__table_name != table_name:
+                self.__db_cursor.execute(f"DELETE from {table_name} WHERE orig_id = '{id}'")
+                self.__db_connection.commit()
     
     def get_all_records(self):
         tables = {}
@@ -304,9 +332,9 @@ class MusicTable(MediaTable):
         table_name = f"{self.__table_name}_{category_name}"
         self.__db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
             orig_id int,
-            title text,
-            director text,
-            year integer
+            song text,
+            album text,
+            artist integer
             )""")
         self.__db_connection.commit()
 
@@ -319,9 +347,9 @@ class MusicTable(MediaTable):
         table_name = f"{self.__table_name}_{category_name}"
         self.__db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
             orig_id int,
-            title text,
-            director text,
-            year integer
+            song text,
+            album text,
+            artist text
             )""")
         # Add record to new category (but only if it hasn't already been added)
         self.__db_cursor.execute(f"SELECT rowid, * FROM {table_name} WHERE orig_id = '{id}'")
