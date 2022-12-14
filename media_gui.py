@@ -63,7 +63,7 @@ class MediaTab:
         self.master = master
 
         # Frame for table
-        self.table_frame = tk.Frame(master)
+        self.table_frame = tk.Frame(self.master)
         self.table_frame.pack(pady=20)
 
         # Define scrollbar for table
@@ -76,6 +76,9 @@ class MediaTab:
 
         # Attach scrollbar
         self.table_scroll.config(command=self.table.yview)
+
+        self.buttons_frame = tk.LabelFrame(self.master, text="Options")
+        self.buttons_frame.pack(fill="x", expand="yes", padx=20)
 
 
 class MoviesTab(MediaTab):
@@ -144,8 +147,91 @@ class MusicTab(MediaTab):
         self.table.heading("Song", text="Song", anchor=tk.CENTER)
         self.table.heading("Album", text="Album", anchor=tk.CENTER)
         self.table.heading("Artist", text="Artist", anchor=tk.CENTER)
+
+        self.add_button = tk.Button(self.buttons_frame, text="Add Item", command=self.add_item_popup)
+        self.add_button.grid(row=0, column=0, padx=10, pady=10)
+
+        self.edit_button = tk.Button(self.buttons_frame, text="Edit Item")
+        self.edit_button.grid(row=0, column=1, padx=10, pady=10)
+
+        self.delete_button = tk.Button(self.buttons_frame, text="Delete Item")
+        self.delete_button.grid(row=0, column=2, padx=10, pady=10)
+
+        self.new_cat_button = tk.Button(self.buttons_frame, text="Create New Category")
+        self.new_cat_button.grid(row=0, column=3, padx=10, pady=10)
+
+        self.move_cat_button = tk.Button(self.buttons_frame, text="Move Item to Category")
+        self.move_cat_button.grid(row=0, column=5, padx=10, pady=10)
         
         self.fill_tables_test()
+    
+    def add_item_popup(self):
+        self.add_window = tk.Tk()
+        self.add_window.title("Add item")
+        self.add_window.geometry(f"300x200")
+
+        # Text fields
+        text_field_frame = tk.LabelFrame(self.add_window, borderwidth=0, highlightthickness=0)
+        text_field_frame.pack(fill="x", expand="yes", padx=20)
+        
+        label1 = tk.Label(text_field_frame, text="Song")
+        label1.grid(row=0, column=0, padx=10, pady=5)
+        self.__entry1 = tk.Entry(text_field_frame, width=30)
+        self.__entry1.grid(row=0, column=1)
+
+        label2 = tk.Label(text_field_frame, text="Album")
+        label2.grid(row=1, column=0, padx=10, pady=5)
+        self.__entry2 = tk.Entry(text_field_frame, width=30)
+        self.__entry2.grid(row=1, column=1)
+
+        label3 = tk.Label(text_field_frame, text="Artist")
+        label3.grid(row=2, column=0, padx=10, pady=5)
+        self.__entry3 = tk.Entry(text_field_frame, width=30)
+        self.__entry3.grid(row=2, column=1)
+
+        # Buttons
+        button_frame = tk.LabelFrame(self.add_window, borderwidth=0, highlightthickness=0)
+        # button_frame.grid_rowconfigure(0, weight=1)
+        # button_frame.grid_columnconfigure(0, weight=1)
+        button_frame.pack(fill="x", expand="yes", padx=20)
+
+        add_button_popup = tk.Button(button_frame, text="Add", command=self.add_item)
+        # add_button_popup.grid(row=0, column=0, padx=10, pady=10)
+        add_button_popup.pack(padx=10, pady=10)
+
+        cancel_button_popup = tk.Button(button_frame, text="Cancel", command=self.add_window.destroy)
+        # cancel_button_popup.grid(row=0, column=1, padx=10, pady=10)
+        cancel_button_popup.pack(padx=10, pady=10)
+
+    def add_item(self):
+        record = [self.__entry1.get(), self.__entry2.get(), self.__entry3.get()]
+        self.media_tables.add_record(record)
+        self.add_window.destroy()
+        self.update_table()
+
+    def update_table(self):
+        tables = self.media_tables.get_all_records()
+        for table in tables:
+            print(table)
+            for record in tables[table]:
+                print("\t", record)
+        print()
+
+        for item in self.table.get_children():
+            self.table.delete(item)
+
+        self.table.tag_configure("oddrow", background="white")
+        self.table.tag_configure("evenrow", background="lightblue")
+        
+        table_data = tables["music_table"]
+        count = 0
+        for record in table_data:
+            if count % 2 == 0:
+                self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("evenrow",))
+            else:
+                self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("oddrow",))
+            count += 1
+
     
     def fill_tables_test(self):
         tables = self.media_tables.get_all_records()
