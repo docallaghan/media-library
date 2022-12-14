@@ -151,19 +151,31 @@ class MusicTab(MediaTab):
         self.add_button = tk.Button(self.buttons_frame, text="Add Item", command=self.add_item_popup)
         self.add_button.grid(row=0, column=0, padx=10, pady=10)
 
-        self.edit_button = tk.Button(self.buttons_frame, text="Edit Item")
+        self.edit_button = tk.Button(self.buttons_frame, text="Edit Item", command=self.edit_item_popup)
         self.edit_button.grid(row=0, column=1, padx=10, pady=10)
+        self.edit_button["state"] = "disabled"
 
-        self.delete_button = tk.Button(self.buttons_frame, text="Delete Item")
+        self.delete_button = tk.Button(self.buttons_frame, text="Delete Item", command=self.delete_item)
         self.delete_button.grid(row=0, column=2, padx=10, pady=10)
+        self.delete_button["state"] = "disabled"
 
         self.new_cat_button = tk.Button(self.buttons_frame, text="Create New Category")
         self.new_cat_button.grid(row=0, column=3, padx=10, pady=10)
 
         self.move_cat_button = tk.Button(self.buttons_frame, text="Move Item to Category")
         self.move_cat_button.grid(row=0, column=5, padx=10, pady=10)
+
+        self.table.bind("<ButtonRelease-1>", lambda x : self.enable_buttons(""))
         
         self.fill_tables_test()
+    
+    def enable_buttons(self, event):
+        self.edit_button["state"] = "normal"
+        self.delete_button["state"] = "normal"
+    
+    def disable_buttons(self):
+        self.edit_button["state"] = "disabled"
+        self.delete_button["state"] = "disabled"
     
     def add_item_popup(self):
         self.add_window = tk.Tk()
@@ -191,16 +203,12 @@ class MusicTab(MediaTab):
 
         # Buttons
         button_frame = tk.LabelFrame(self.add_window, borderwidth=0, highlightthickness=0)
-        # button_frame.grid_rowconfigure(0, weight=1)
-        # button_frame.grid_columnconfigure(0, weight=1)
         button_frame.pack(fill="x", expand="yes", padx=20)
 
         add_button_popup = tk.Button(button_frame, text="Add", command=self.add_item)
-        # add_button_popup.grid(row=0, column=0, padx=10, pady=10)
         add_button_popup.pack(padx=10, pady=10)
 
         cancel_button_popup = tk.Button(button_frame, text="Cancel", command=self.add_window.destroy)
-        # cancel_button_popup.grid(row=0, column=1, padx=10, pady=10)
         cancel_button_popup.pack(padx=10, pady=10)
 
     def add_item(self):
@@ -208,6 +216,70 @@ class MusicTab(MediaTab):
         self.media_tables.add_record(record)
         self.add_window.destroy()
         self.update_table()
+        self.disable_buttons()
+    
+    def delete_item(self):
+        selected_item = self.table.focus()
+        if selected_item == '':
+            return # TODO disable button for this scenario
+        else:
+            print("Deleting")
+        values = self.table.item(selected_item, 'values')
+        record_id = int(values[0])
+        self.media_tables.delete_record(record_id)
+        self.update_table()
+        self.disable_buttons()
+
+    def edit_item_popup(self):
+        selected_item = self.table.focus()
+        if selected_item == '':
+            return # TODO disable button for this scenario
+        else:
+            print("Editing")
+        values = self.table.item(selected_item, 'values')
+        
+        self.edit_window = tk.Tk()
+        self.edit_window.title("Add item")
+        self.edit_window.geometry(f"300x200")
+
+        # Text fields
+        text_field_frame = tk.LabelFrame(self.edit_window, borderwidth=0, highlightthickness=0)
+        text_field_frame.pack(fill="x", expand="yes", padx=20)
+        
+        label1 = tk.Label(text_field_frame, text="Song")
+        label1.grid(row=0, column=0, padx=10, pady=5)
+        self.__entry1 = tk.Entry(text_field_frame, width=30)
+        self.__entry1.grid(row=0, column=1)
+        self.__entry1.insert(0, values[1])
+
+        label2 = tk.Label(text_field_frame, text="Album")
+        label2.grid(row=1, column=0, padx=10, pady=5)
+        self.__entry2 = tk.Entry(text_field_frame, width=30)
+        self.__entry2.grid(row=1, column=1)
+        self.__entry2.insert(0, values[2])
+
+        label3 = tk.Label(text_field_frame, text="Artist")
+        label3.grid(row=2, column=0, padx=10, pady=5)
+        self.__entry3 = tk.Entry(text_field_frame, width=30)
+        self.__entry3.grid(row=2, column=1)
+        self.__entry3.insert(0, values[3])
+
+        # Buttons
+        button_frame = tk.LabelFrame(self.edit_window, borderwidth=0, highlightthickness=0)
+        button_frame.pack(fill="x", expand="yes", padx=20)
+
+        edit_button_popup = tk.Button(button_frame, text="Done", command=lambda : self.edit_item(values[0]))
+        edit_button_popup.pack(padx=10, pady=10)
+
+        cancel_button_popup = tk.Button(button_frame, text="Cancel", command=self.edit_window.destroy)
+        cancel_button_popup.pack(padx=10, pady=10)
+        
+    def edit_item(self, record_id):
+        record = [self.__entry1.get(), self.__entry2.get(), self.__entry3.get()]
+        self.media_tables.edit_record(record_id, song=record[0], album=record[1], artist=record[2])
+        self.edit_window.destroy()
+        self.update_table()
+        self.disable_buttons()
 
     def update_table(self):
         tables = self.media_tables.get_all_records()
