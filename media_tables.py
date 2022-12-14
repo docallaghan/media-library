@@ -104,7 +104,7 @@ class MoviesTable(MediaTable):
         record = self.__db_cursor.fetchone()
         # Add category table if it doesn't exist
         table_name = f"{self.__table_name}_{category_name}"
-        db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
+        self.__db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
             orig_id int,
             title text,
             director text,
@@ -125,9 +125,9 @@ class MoviesTable(MediaTable):
         self.__db_connection.commit()
 
     def __get_table_names(self):
-        db_cursor.execute("""SELECT name FROM sqlite_master WHERE type='table';""")
-        db_connection.commit()
-        data = db_cursor.fetchall()
+        self.__db_cursor.execute("""SELECT name FROM sqlite_master WHERE type='table';""")
+        self.__db_connection.commit()
+        data = self.__db_cursor.fetchall()
         table_names = [x[0] for x in data]
         table_names = [x for x in table_names if self.__table_name in x]
         return table_names
@@ -139,7 +139,7 @@ class GamesTable(MediaTable):
         self.__db_connection = db_connection
         self.__db_cursor = db_cursor
         self.__table_name = "games_table"
-        db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {self.__table_name} (
+        self.__db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {self.__table_name} (
             name text,
             platform text,
             developer text
@@ -190,7 +190,7 @@ class GamesTable(MediaTable):
         record = self.__db_cursor.fetchone()
         # Add category table if it doesn't exist
         table_name = f"{self.__table_name}_{category_name}"
-        db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
+        self.__db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
             orig_id int,
             title text,
             director text,
@@ -211,9 +211,9 @@ class GamesTable(MediaTable):
         self.__db_connection.commit()
 
     def __get_table_names(self):
-        db_cursor.execute("""SELECT name FROM sqlite_master WHERE type='table';""")
-        db_connection.commit()
-        data = db_cursor.fetchall()
+        self.__db_cursor.execute("""SELECT name FROM sqlite_master WHERE type='table';""")
+        self.__db_connection.commit()
+        data = self.__db_cursor.fetchall()
         table_names = [x[0] for x in data]
         table_names = [x for x in table_names if self.__table_name in x]
         return table_names
@@ -225,7 +225,7 @@ class MusicTable(MediaTable):
         self.__db_connection = db_connection
         self.__db_cursor = db_cursor
         self.__table_name = "music_table"
-        db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {self.__table_name} (
+        self.__db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {self.__table_name} (
             song text,
             album text,
             artist text
@@ -276,7 +276,7 @@ class MusicTable(MediaTable):
         record = self.__db_cursor.fetchone()
         # Add category table if it doesn't exist
         table_name = f"{self.__table_name}_{category_name}"
-        db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
+        self.__db_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
             orig_id int,
             title text,
             director text,
@@ -297,9 +297,9 @@ class MusicTable(MediaTable):
         self.__db_connection.commit()
 
     def __get_table_names(self):
-        db_cursor.execute("""SELECT name FROM sqlite_master WHERE type='table';""")
-        db_connection.commit()
-        data = db_cursor.fetchall()
+        self.__db_cursor.execute("""SELECT name FROM sqlite_master WHERE type='table';""")
+        self.__db_connection.commit()
+        data = self.__db_cursor.fetchall()
         table_names = [x[0] for x in data]
         table_names = [x for x in table_names if self.__table_name in x]
         return table_names
