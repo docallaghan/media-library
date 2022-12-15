@@ -16,7 +16,7 @@ If running unit_tests.py, the following modules from the Python Standard Library
 No other libraries are used.
 
 ### Run instructions
-From the command prompt, navigate to the same directory as media_gui.py and run the below command. 
+After cloning this repository, in the command prompt, navigate to the same directory as media_gui.py and run the below command. 
 
 ```python media_gui.py```
 
