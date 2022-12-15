@@ -16,12 +16,14 @@ If running unit_tests.py, the following modules from the Python Standard Library
 No other libraries are used.
 
 ### Run instructions
-From the command prompt, navigate to the same directory as media_gui.py and run the below command.
+From the command prompt, navigate to the same directory as media_gui.py and run the below command. 
 
 ```python media_gui.py```
 
+Note that there is an example database in the repo to make it easier to explore the application. If you want to explore the empty media library, please delete "media.db".
+
 ### Testing
-I implemted a couple of unit tests for checking the database operations. These can be found in unit_tests.py. With more time, I would increase the test coverage.
+I implemted a couple of unit tests for checking the database operations. These can be found in "unit_tests.py". With more time, I would increase the test coverage.
 
 ### Usage instructions
 
