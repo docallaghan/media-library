@@ -17,6 +17,7 @@ No other libraries are used.
 
 ### Run instructions
 From the command prompt, navigate to the same directory as media_gui.py and run the below command.
+
 ```python media_gui.py```
 
 ### Testing
