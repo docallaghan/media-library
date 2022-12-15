@@ -315,6 +315,7 @@ class MusicTab(MediaTab):
         """Called whenever the categories in the dropdown menu need to be refreshed"""
         categories = self.get_categories()
         categories = ["All"] + [x[len(self.main_table_name)+1:] for x in categories]
+        categories = [x.replace('_', ' ') for x in categories]
         self.dropdown_menu["values"] = tuple(categories)
     
     def create_new_category_popup(self):
@@ -345,6 +346,7 @@ class MusicTab(MediaTab):
     def create_new_category(self):
         """Command exectured after confirming details when creating a category"""
         category_name = self.entry1.get()
+        category_name = category_name.replace(' ', '_')
         self.media_tables.add_new_category(category_name)
         self.create_cat_window.destroy()
         self.update_dropdown_categories()
