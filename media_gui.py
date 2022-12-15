@@ -43,9 +43,12 @@ class GUI(tk.Tk):
         window.add(games_frame, text="Games")
         window.add(music_frame, text="Music")
 
-        self.movies_tab = MoviesTab(movies_frame, self.__db_connection, self.__db_cursor)
-        self.games_tab = GamesTab(games_frame, self.__db_connection, self.__db_cursor)
-        self.music_tab = MusicTab(music_frame, self.__db_connection, self.__db_cursor)
+        self.movies_tab = MoviesTab(movies_frame, self.__db_connection, self.__db_cursor, main_table_name="movies_table", 
+            column_dict={"title": "text", "director": "text", "year": "integer"})
+        self.games_tab = GamesTab(games_frame, self.__db_connection, self.__db_cursor, main_table_name="games_table", 
+            column_dict={"name": "text", "platform": "text", "developer": "text"})
+        self.music_tab = MusicTab(music_frame, self.__db_connection, self.__db_cursor, main_table_name="music_table", 
+            column_dict={"song": "text", "album": "text", "artist": "text"})
     
     def __connect_to_database(self, database_path):
         # persistent storage DB
@@ -91,66 +94,22 @@ class MediaTab:
         self.buttons_frame.pack(fill="x", expand="yes", padx=20)
 
 
-class MoviesTab(MediaTab):
-    def __init__(self, master, db_connection, db_cursor):
-        super().__init__(master)
-        self.__db_connection = db_connection
-        self.__db_cursor = db_cursor
-
-        self.media_tables = media_tables.MoviesTable(self.__db_connection, self.__db_cursor)
-
-        # Columns
-        self.table["columns"] = ("ID", "Title", "Director", "Year")
-        self.table.column("#0", width=0, stretch=tk.NO) # Disable column 0
-        self.table.column("ID", anchor=tk.W, width=140)
-        self.table.column("Title", anchor=tk.W, width=140)
-        self.table.column("Director", anchor=tk.W, width=140)
-        self.table.column("Year", anchor=tk.W, width=140)
-
-        self.table.heading("#0", text="")
-        self.table.heading("ID", text="ID", anchor=tk.CENTER)
-        self.table.heading("Title", text="Title", anchor=tk.CENTER)
-        self.table.heading("Director", text="Director", anchor=tk.CENTER)
-        self.table.heading("Year", text="Year", anchor=tk.CENTER)
-
-class GamesTab(MediaTab):
-    def __init__(self, master, db_connection, db_cursor):
-        super().__init__(master)
-        self.__db_connection = db_connection
-        self.__db_cursor = db_cursor
-
-        self.media_tables = media_tables.GamesTable(self.__db_connection, self.__db_cursor)
-
-        # Columns
-        self.table["columns"] = ("ID", "Name", "Platform", "Developer")
-        self.table.column("#0", width=0, stretch=tk.NO) # Disable column 0
-        self.table.column("ID", anchor=tk.W, width=140)
-        self.table.column("Name", anchor=tk.W, width=140)
-        self.table.column("Platform", anchor=tk.W, width=140)
-        self.table.column("Developer", anchor=tk.W, width=140)
-
-        self.table.heading("#0", text="")
-        self.table.heading("ID", text="ID", anchor=tk.CENTER)
-        self.table.heading("Name", text="Name", anchor=tk.CENTER)
-        self.table.heading("Platform", text="Platform", anchor=tk.CENTER)
-        self.table.heading("Developer", text="Developer", anchor=tk.CENTER)
-
-
 class MusicTab(MediaTab):
-    def __init__(self, master, db_connection, db_cursor):
+    def __init__(self, master, db_connection, db_cursor, main_table_name, column_dict):
         super().__init__(master)
         self.__db_connection = db_connection
         self.__db_cursor = db_cursor
+        self.main_table_name = main_table_name
 
-        self.media_tables = media_tables.MusicTable(self.__db_connection, self.__db_cursor)
+        self.media_tables = media_tables.MediaTable(self.__db_connection, self.__db_cursor, main_table_name, column_dict)
 
         # Columns
         self.table["columns"] = ("ID", "Song", "Album", "Artist")
         self.table.column("#0", width=0, stretch=tk.NO) # Disable column 0
-        self.table.column("ID", anchor=tk.W, width=140)
-        self.table.column("Song", anchor=tk.W, width=140)
-        self.table.column("Album", anchor=tk.W, width=140)
-        self.table.column("Artist", anchor=tk.W, width=140)
+        self.table.column("ID", anchor=tk.W, width=65)
+        self.table.column("Song", anchor=tk.W, width=165)
+        self.table.column("Album", anchor=tk.W, width=165)
+        self.table.column("Artist", anchor=tk.W, width=165)
 
         self.table.heading("#0", text="")
         self.table.heading("ID", text="ID", anchor=tk.CENTER)
@@ -179,12 +138,6 @@ class MusicTab(MediaTab):
         self.table.bind("<ButtonRelease-1>", lambda x : self.enable_buttons(""))
         self.dropdown_menu.bind("<<ComboboxSelected>>", lambda x : self.change_category(""))
         self.display_category = 0 # Initial dropdown key to display
-
-        
-
-        # self.media_tables.add_to_category(1, "Favourites")
-        # self.media_tables.add_to_category(2, "Favourites")
-        # self.media_tables.add_to_category(4, "Favourites")
         
         self.update_table()
         self.update_dropdown_categories()
@@ -207,21 +160,21 @@ class MusicTab(MediaTab):
         # Text fields
         text_field_frame = tk.LabelFrame(self.add_window, borderwidth=0, highlightthickness=0)
         text_field_frame.pack(fill="x", expand="yes", padx=20)
-        
+        # TODO
         label1 = tk.Label(text_field_frame, text="Song")
         label1.grid(row=0, column=0, padx=10, pady=5)
-        self.__entry1 = tk.Entry(text_field_frame, width=30)
-        self.__entry1.grid(row=0, column=1)
+        self.entry1 = tk.Entry(text_field_frame, width=30)
+        self.entry1.grid(row=0, column=1)
 
         label2 = tk.Label(text_field_frame, text="Album")
         label2.grid(row=1, column=0, padx=10, pady=5)
-        self.__entry2 = tk.Entry(text_field_frame, width=30)
-        self.__entry2.grid(row=1, column=1)
+        self.entry2 = tk.Entry(text_field_frame, width=30)
+        self.entry2.grid(row=1, column=1)
 
         label3 = tk.Label(text_field_frame, text="Artist")
         label3.grid(row=2, column=0, padx=10, pady=5)
-        self.__entry3 = tk.Entry(text_field_frame, width=30)
-        self.__entry3.grid(row=2, column=1)
+        self.entry3 = tk.Entry(text_field_frame, width=30)
+        self.entry3.grid(row=2, column=1)
 
         # Buttons
         button_frame = tk.LabelFrame(self.add_window, borderwidth=0, highlightthickness=0)
@@ -234,7 +187,7 @@ class MusicTab(MediaTab):
         cancel_button_popup.pack(padx=10, pady=10)
 
     def add_item(self):
-        record = [self.__entry1.get(), self.__entry2.get(), self.__entry3.get()]
+        record = [self.entry1.get(), self.entry2.get(), self.entry3.get()]
         self.media_tables.add_record(record)
         self.add_window.destroy()
         self.update_table()
@@ -244,8 +197,7 @@ class MusicTab(MediaTab):
         selected_item = self.table.focus()
         if selected_item == '':
             return # TODO disable button for this scenario
-        else:
-            print("Deleting")
+        
         values = self.table.item(selected_item, 'values')
         record_id = int(values[0])
         self.media_tables.delete_record(record_id)
@@ -256,8 +208,7 @@ class MusicTab(MediaTab):
         selected_item = self.table.focus()
         if selected_item == '':
             return # TODO disable button for this scenario
-        else:
-            print("Editing")
+        
         values = self.table.item(selected_item, 'values')
         
         self.edit_window = tk.Tk()
@@ -270,21 +221,21 @@ class MusicTab(MediaTab):
         
         label1 = tk.Label(text_field_frame, text="Song")
         label1.grid(row=0, column=0, padx=10, pady=5)
-        self.__entry1 = tk.Entry(text_field_frame, width=30)
-        self.__entry1.grid(row=0, column=1)
-        self.__entry1.insert(0, values[1])
+        self.entry1 = tk.Entry(text_field_frame, width=30)
+        self.entry1.grid(row=0, column=1)
+        self.entry1.insert(0, values[1])
 
         label2 = tk.Label(text_field_frame, text="Album")
         label2.grid(row=1, column=0, padx=10, pady=5)
-        self.__entry2 = tk.Entry(text_field_frame, width=30)
-        self.__entry2.grid(row=1, column=1)
-        self.__entry2.insert(0, values[2])
+        self.entry2 = tk.Entry(text_field_frame, width=30)
+        self.entry2.grid(row=1, column=1)
+        self.entry2.insert(0, values[2])
 
         label3 = tk.Label(text_field_frame, text="Artist")
         label3.grid(row=2, column=0, padx=10, pady=5)
-        self.__entry3 = tk.Entry(text_field_frame, width=30)
-        self.__entry3.grid(row=2, column=1)
-        self.__entry3.insert(0, values[3])
+        self.entry3 = tk.Entry(text_field_frame, width=30)
+        self.entry3.grid(row=2, column=1)
+        self.entry3.insert(0, values[3])
 
         # Buttons
         button_frame = tk.LabelFrame(self.edit_window, borderwidth=0, highlightthickness=0)
@@ -297,7 +248,7 @@ class MusicTab(MediaTab):
         cancel_button_popup.pack(padx=10, pady=10)
         
     def edit_item(self, record_id):
-        record = [self.__entry1.get(), self.__entry2.get(), self.__entry3.get()]
+        record = [self.entry1.get(), self.entry2.get(), self.entry3.get()]
         self.media_tables.edit_record(record_id, song=record[0], album=record[1], artist=record[2])
         self.edit_window.destroy()
         self.update_table()
@@ -313,12 +264,10 @@ class MusicTab(MediaTab):
         self.table.tag_configure("evenrow", background="lightblue")
         category = list(tables.keys())[self.display_category]
         table_data = tables[category]
-        # print(category)
-        # print(table_data)
         
         count = 0
         for record in table_data:
-            if category != "music_table":
+            if category != self.main_table_name:
                 record = tuple(list(record[1:]))
             if count % 2 == 0:
                 self.table.insert(parent="", index="end", iid=count, text="", values=tuple(record), tags=("evenrow",))
@@ -339,7 +288,7 @@ class MusicTab(MediaTab):
     
     def update_dropdown_categories(self):
         categories = self.get_categories()
-        categories = ["All"] + [x[len("music_table")+1:] for x in categories]
+        categories = ["All"] + [x[len(self.main_table_name)+1:] for x in categories]
         self.dropdown_menu["values"] = tuple(categories)
     
     def create_new_category_popup(self):
@@ -353,8 +302,8 @@ class MusicTab(MediaTab):
         
         label1 = tk.Label(text_field_frame, text="Category Name")
         label1.grid(row=0, column=0, padx=10, pady=5)
-        self.__entry1 = tk.Entry(text_field_frame, width=30)
-        self.__entry1.grid(row=0, column=1)
+        self.entry1 = tk.Entry(text_field_frame, width=30)
+        self.entry1.grid(row=0, column=1)
 
         # Buttons
         button_frame = tk.LabelFrame(self.create_cat_window, borderwidth=0, highlightthickness=0)
@@ -367,7 +316,7 @@ class MusicTab(MediaTab):
         cancel_button_popup.pack(padx=10, pady=10)
     
     def create_new_category(self):
-        category_name = self.__entry1.get()
+        category_name = self.entry1.get()
         self.media_tables.add_new_category(category_name)
         self.create_cat_window.destroy()
         self.update_dropdown_categories()
@@ -385,7 +334,7 @@ class MusicTab(MediaTab):
         label1.grid(row=0, column=0, padx=10, pady=5)
 
         categories = self.get_categories()
-        categories = [x[len("music_table")+1:] for x in categories]
+        categories = [x[len(self.main_table_name)+1:] for x in categories]
         self.popup_dropdown_menu = ttk.Combobox(text_field_frame, state="readonly", values=categories)
         self.popup_dropdown_menu.grid(row=0, column=1)
 
@@ -403,19 +352,270 @@ class MusicTab(MediaTab):
         selected_item = self.table.focus()
         if selected_item == '':
             return # TODO disable button for this scenario
-        else:
-            print("Deleting")
+        
         values = self.table.item(selected_item, 'values')
         record_id = int(values[0])
 
         categories = self.get_categories()
         category_id = self.popup_dropdown_menu.current()
-        category = categories[category_id][len("music_table")+1:]
+        category = categories[category_id][len(self.main_table_name)+1:]
         self.media_tables.add_to_category(record_id, category)
         self.add_to_cat_window.destroy()
         self.update_table()
         self.disable_buttons()
+
+
+class MoviesTab(MusicTab):
+    def __init__(self, master, db_connection, db_cursor, main_table_name, column_dict):
+        super().__init__(master, db_connection, db_cursor, main_table_name, column_dict)
+        self.__db_connection = db_connection
+        self.__db_cursor = db_cursor
+        self.main_table_name = main_table_name
+
+        self.media_tables = media_tables.MediaTable(self.__db_connection, self.__db_cursor, main_table_name, column_dict)
+
+        # Columns
+        self.table["columns"] = ("ID", "Title", "Director", "Year")
+        self.table.column("#0", width=0, stretch=tk.NO) # Disable column 0
+        self.table.column("ID", anchor=tk.W, width=65)
+        self.table.column("Title", anchor=tk.W, width=165)
+        self.table.column("Director", anchor=tk.W, width=165)
+        self.table.column("Year", anchor=tk.W, width=165)
+
+        self.table.heading("#0", text="")
+        self.table.heading("ID", text="ID", anchor=tk.CENTER)
+        self.table.heading("Title", text="Title", anchor=tk.CENTER)
+        self.table.heading("Director", text="Director", anchor=tk.CENTER)
+        self.table.heading("Year", text="Year", anchor=tk.CENTER)
+
+        self.add_button = tk.Button(self.buttons_frame, text="Add Item", command=self.add_item_popup)
+        self.add_button.grid(row=0, column=0, padx=10, pady=10)
+
+        self.edit_button = tk.Button(self.buttons_frame, text="Edit Item", command=self.edit_item_popup)
+        self.edit_button.grid(row=0, column=1, padx=10, pady=10)
+        self.edit_button["state"] = "disabled"
+
+        self.delete_button = tk.Button(self.buttons_frame, text="Delete Item", command=self.delete_item)
+        self.delete_button.grid(row=0, column=2, padx=10, pady=10)
+        self.delete_button["state"] = "disabled"
+
+        self.new_cat_button = tk.Button(self.buttons_frame, text="Create New Category", command=self.create_new_category_popup)
+        self.new_cat_button.grid(row=0, column=3, padx=10, pady=10)
+
+        self.add_to_cat_button = tk.Button(self.buttons_frame, text="Add Item to Category", command=self.add_to_category_popup)
+        self.add_to_cat_button.grid(row=0, column=5, padx=10, pady=10)
+        self.add_to_cat_button["state"] = "disabled"
+
+        self.table.bind("<ButtonRelease-1>", lambda x : self.enable_buttons(""))
+        self.dropdown_menu.bind("<<ComboboxSelected>>", lambda x : self.change_category(""))
+        self.display_category = 0 # Initial dropdown key to display
         
+        self.update_table()
+        self.update_dropdown_categories()
+    
+    def add_item_popup(self):
+        self.add_window = tk.Tk()
+        self.add_window.title("Add item")
+        self.add_window.geometry(f"300x200")
+
+        # Text fields
+        text_field_frame = tk.LabelFrame(self.add_window, borderwidth=0, highlightthickness=0)
+        text_field_frame.pack(fill="x", expand="yes", padx=20)
+        # TODO
+        label1 = tk.Label(text_field_frame, text="Title")
+        label1.grid(row=0, column=0, padx=10, pady=5)
+        self.entry1 = tk.Entry(text_field_frame, width=30)
+        self.entry1.grid(row=0, column=1)
+
+        label2 = tk.Label(text_field_frame, text="Director")
+        label2.grid(row=1, column=0, padx=10, pady=5)
+        self.entry2 = tk.Entry(text_field_frame, width=30)
+        self.entry2.grid(row=1, column=1)
+
+        label3 = tk.Label(text_field_frame, text="Year")
+        label3.grid(row=2, column=0, padx=10, pady=5)
+        self.entry3 = tk.Entry(text_field_frame, width=30)
+        self.entry3.grid(row=2, column=1)
+
+        # Buttons
+        button_frame = tk.LabelFrame(self.add_window, borderwidth=0, highlightthickness=0)
+        button_frame.pack(fill="x", expand="yes", padx=20)
+
+        add_button_popup = tk.Button(button_frame, text="Add", command=self.add_item)
+        add_button_popup.pack(padx=10, pady=10)
+
+        cancel_button_popup = tk.Button(button_frame, text="Cancel", command=self.add_window.destroy)
+        cancel_button_popup.pack(padx=10, pady=10)
+    
+    def edit_item_popup(self):
+        selected_item = self.table.focus()
+        if selected_item == '':
+            return # TODO disable button for this scenario
+        
+        values = self.table.item(selected_item, 'values')
+        
+        self.edit_window = tk.Tk()
+        self.edit_window.title("Add item")
+        self.edit_window.geometry(f"300x200")
+
+        # Text fields
+        text_field_frame = tk.LabelFrame(self.edit_window, borderwidth=0, highlightthickness=0)
+        text_field_frame.pack(fill="x", expand="yes", padx=20)
+        
+        label1 = tk.Label(text_field_frame, text="Title")
+        label1.grid(row=0, column=0, padx=10, pady=5)
+        self.entry1 = tk.Entry(text_field_frame, width=30)
+        self.entry1.grid(row=0, column=1)
+        self.entry1.insert(0, values[1])
+
+        label2 = tk.Label(text_field_frame, text="Director")
+        label2.grid(row=1, column=0, padx=10, pady=5)
+        self.entry2 = tk.Entry(text_field_frame, width=30)
+        self.entry2.grid(row=1, column=1)
+        self.entry2.insert(0, values[2])
+
+        label3 = tk.Label(text_field_frame, text="Year")
+        label3.grid(row=2, column=0, padx=10, pady=5)
+        self.entry3 = tk.Entry(text_field_frame, width=30)
+        self.entry3.grid(row=2, column=1)
+        self.entry3.insert(0, values[3])
+
+        # Buttons
+        button_frame = tk.LabelFrame(self.edit_window, borderwidth=0, highlightthickness=0)
+        button_frame.pack(fill="x", expand="yes", padx=20)
+
+        edit_button_popup = tk.Button(button_frame, text="Done", command=lambda : self.edit_item(values[0]))
+        edit_button_popup.pack(padx=10, pady=10)
+
+        cancel_button_popup = tk.Button(button_frame, text="Cancel", command=self.edit_window.destroy)
+        cancel_button_popup.pack(padx=10, pady=10)
+
+
+class GamesTab(MusicTab):
+    def __init__(self, master, db_connection, db_cursor, main_table_name, column_dict):
+        super().__init__(master, db_connection, db_cursor, main_table_name, column_dict)
+        self.__db_connection = db_connection
+        self.__db_cursor = db_cursor
+        self.main_table_name = main_table_name
+
+        self.media_tables = media_tables.MediaTable(self.__db_connection, self.__db_cursor, main_table_name, column_dict)
+
+        # Columns
+        self.table["columns"] = ("ID", "Name", "Platform", "Developer")
+        self.table.column("#0", width=0, stretch=tk.NO) # Disable column 0
+        self.table.column("ID", anchor=tk.W, width=65)
+        self.table.column("Name", anchor=tk.W, width=165)
+        self.table.column("Platform", anchor=tk.W, width=165)
+        self.table.column("Developer", anchor=tk.W, width=165)
+
+        self.table.heading("#0", text="")
+        self.table.heading("ID", text="ID", anchor=tk.CENTER)
+        self.table.heading("Name", text="Name", anchor=tk.CENTER)
+        self.table.heading("Platform", text="Platform", anchor=tk.CENTER)
+        self.table.heading("Developer", text="Developer", anchor=tk.CENTER)
+
+        self.add_button = tk.Button(self.buttons_frame, text="Add Item", command=self.add_item_popup)
+        self.add_button.grid(row=0, column=0, padx=10, pady=10)
+
+        self.edit_button = tk.Button(self.buttons_frame, text="Edit Item", command=self.edit_item_popup)
+        self.edit_button.grid(row=0, column=1, padx=10, pady=10)
+        self.edit_button["state"] = "disabled"
+
+        self.delete_button = tk.Button(self.buttons_frame, text="Delete Item", command=self.delete_item)
+        self.delete_button.grid(row=0, column=2, padx=10, pady=10)
+        self.delete_button["state"] = "disabled"
+
+        self.new_cat_button = tk.Button(self.buttons_frame, text="Create New Category", command=self.create_new_category_popup)
+        self.new_cat_button.grid(row=0, column=3, padx=10, pady=10)
+
+        self.add_to_cat_button = tk.Button(self.buttons_frame, text="Add Item to Category", command=self.add_to_category_popup)
+        self.add_to_cat_button.grid(row=0, column=5, padx=10, pady=10)
+        self.add_to_cat_button["state"] = "disabled"
+
+        self.table.bind("<ButtonRelease-1>", lambda x : self.enable_buttons(""))
+        self.dropdown_menu.bind("<<ComboboxSelected>>", lambda x : self.change_category(""))
+        self.display_category = 0 # Initial dropdown key to display
+        
+        self.update_table()
+        self.update_dropdown_categories()
+    
+    def edit_item_popup(self):
+        selected_item = self.table.focus()
+        if selected_item == '':
+            return # TODO disable button for this scenario
+        
+        values = self.table.item(selected_item, 'values')
+        
+        self.edit_window = tk.Tk()
+        self.edit_window.title("Add item")
+        self.edit_window.geometry(f"300x200")
+
+        # Text fields
+        text_field_frame = tk.LabelFrame(self.edit_window, borderwidth=0, highlightthickness=0)
+        text_field_frame.pack(fill="x", expand="yes", padx=20)
+        
+        label1 = tk.Label(text_field_frame, text="Name")
+        label1.grid(row=0, column=0, padx=10, pady=5)
+        self.entry1 = tk.Entry(text_field_frame, width=30)
+        self.entry1.grid(row=0, column=1)
+        self.entry1.insert(0, values[1])
+
+        label2 = tk.Label(text_field_frame, text="Platform")
+        label2.grid(row=1, column=0, padx=10, pady=5)
+        self.entry2 = tk.Entry(text_field_frame, width=30)
+        self.entry2.grid(row=1, column=1)
+        self.entry2.insert(0, values[2])
+
+        label3 = tk.Label(text_field_frame, text="Developer")
+        label3.grid(row=2, column=0, padx=10, pady=5)
+        self.entry3 = tk.Entry(text_field_frame, width=30)
+        self.entry3.grid(row=2, column=1)
+        self.entry3.insert(0, values[3])
+
+        # Buttons
+        button_frame = tk.LabelFrame(self.edit_window, borderwidth=0, highlightthickness=0)
+        button_frame.pack(fill="x", expand="yes", padx=20)
+
+        edit_button_popup = tk.Button(button_frame, text="Done", command=lambda : self.edit_item(values[0]))
+        edit_button_popup.pack(padx=10, pady=10)
+
+        cancel_button_popup = tk.Button(button_frame, text="Cancel", command=self.edit_window.destroy)
+        cancel_button_popup.pack(padx=10, pady=10)
+    
+    def add_item_popup(self):
+        self.add_window = tk.Tk()
+        self.add_window.title("Add item")
+        self.add_window.geometry(f"300x200")
+
+        # Text fields
+        text_field_frame = tk.LabelFrame(self.add_window, borderwidth=0, highlightthickness=0)
+        text_field_frame.pack(fill="x", expand="yes", padx=20)
+        # TODO
+        label1 = tk.Label(text_field_frame, text="Name")
+        label1.grid(row=0, column=0, padx=10, pady=5)
+        self.entry1 = tk.Entry(text_field_frame, width=30)
+        self.entry1.grid(row=0, column=1)
+
+        label2 = tk.Label(text_field_frame, text="Platform")
+        label2.grid(row=1, column=0, padx=10, pady=5)
+        self.entry2 = tk.Entry(text_field_frame, width=30)
+        self.entry2.grid(row=1, column=1)
+
+        label3 = tk.Label(text_field_frame, text="Developer")
+        label3.grid(row=2, column=0, padx=10, pady=5)
+        self.entry3 = tk.Entry(text_field_frame, width=30)
+        self.entry3.grid(row=2, column=1)
+
+        # Buttons
+        button_frame = tk.LabelFrame(self.add_window, borderwidth=0, highlightthickness=0)
+        button_frame.pack(fill="x", expand="yes", padx=20)
+
+        add_button_popup = tk.Button(button_frame, text="Add", command=self.add_item)
+        add_button_popup.pack(padx=10, pady=10)
+
+        cancel_button_popup = tk.Button(button_frame, text="Cancel", command=self.add_window.destroy)
+        cancel_button_popup.pack(padx=10, pady=10)
+    
 
 def initialise_database_for_testing(database_path):
     # persistent storage DB
