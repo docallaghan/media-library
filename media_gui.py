@@ -307,7 +307,6 @@ class MusicTab(MediaTab):
     
     def change_category(self, event):
         """Changes table being displayed based on category dropdown menu"""
-        print(self.dropdown_menu.current())
         self.display_category = self.dropdown_menu.current()
         self.update_table()
         self.disable_buttons()

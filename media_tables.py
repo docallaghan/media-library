@@ -2,6 +2,7 @@ import abc
 import sqlite3
 
 class MediaTableABC(abc.ABC):
+    """Abstract class for MediaTable to define interface"""
 
     @abc.abstractmethod
     def add_record(self, record):
@@ -51,6 +52,16 @@ class MediaTableABC(abc.ABC):
         Parameters:
             id (int): rowid of the record
             category_name (str): name of category to add record to
+        """
+        pass
+    
+    @abc.abstractmethod
+    def get_all_records(self):
+        """Retrieve all records from the database
+        Parameters:
+            None
+        Returns:
+            A dictionary containing all DB records
         """
         pass
 
